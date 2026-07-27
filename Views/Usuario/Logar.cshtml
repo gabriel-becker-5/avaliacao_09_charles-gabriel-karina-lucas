@@ -1,0 +1,24 @@
+﻿@using avaliacao_09_charles_gabriel_karina_lucas.Models.ViewModels
+@model CadastroUsuarioViewModel
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h4>Entrar no Sistema</h4>
+    <form asp-controller="Usuario" asp-action="logar" method="post">
+        <div>
+            <label for="email">E-mail</label><br>
+            <input type="email" asp-for="Email" id="email" name="email" placeholder="Digite seu e-mail" required>
+        </div>
+        <br>
+        <div>
+            <label for="senha">Senha</label><br>
+            <input type="password" asp-for="Senha" id="senha" name="senha" placeholder="Digite sua senha" required>
+        </div>
+        <div>@ViewBag.CredentialError</div>
+        <br>
+        <button type="submit">Entrar</button>
+    </form>
+</div>

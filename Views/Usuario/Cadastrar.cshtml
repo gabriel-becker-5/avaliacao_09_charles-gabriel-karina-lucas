@@ -1,0 +1,30 @@
+﻿@using avaliacao_09_charles_gabriel_karina_lucas.Models.ViewModels
+@model CadastroUsuarioViewModel
+
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h4>Cadastrar Novo Usuário</h4>
+    <form asp-controller="Usuario" asp-action="cadastrar" method="post">
+         <div>
+            <label for="nome">Nome</label><br>
+            <input type="text" asp-for="Nome" id="nome" name="nome" placeholder="Digite seu nome" required>
+        </div>
+        <br>
+        <div>
+            <label for="email">E-mail</label><br>
+            <input type="email" asp-for="Email" id="email" name="email" placeholder="Digite seu e-mail" required>
+        </div>
+        <br>
+        <div>
+            <label for="senha">Senha</label><br>
+            <input type="password" asp-for="Senha" id="senha" name="senha" placeholder="Digite sua senha" required>
+        </div>
+        <div asp-validation-summary="All" style="color:red"></div>
+        <div>@ViewBag.DuplicateUser</div>
+        <br>
+        <button type="submit">Cadastrar</button>
+    </form>
+</div>
