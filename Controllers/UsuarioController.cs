@@ -8,7 +8,6 @@ using System.Security.Claims;
 
 namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
 {
-    [Route("usuario")]
     [Authorize]
     public class UsuarioController : Controller
     {
@@ -22,19 +21,25 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            ViewData["IdUsuario"] = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewData["UserId"] = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ViewData["Username"] = User.FindFirstValue(ClaimTypes.Name);
             return View();
         }
 
         [AllowAnonymous]
-        [HttpGet("cadastrar")]
+        [HttpGet]
         public IActionResult Cadastrar()
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index");
+            }
+
             return View();
         }
         
         [AllowAnonymous]
-        [HttpPost("cadastrar")]
+        [HttpPost]
         public async Task<IActionResult> Cadastrar(CadastroUsuarioViewModel novoUsuario)
         {
             if (!ModelState.IsValid)
@@ -44,38 +49,41 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
 
             if (!await _usuarioService.CadastrarUsuario(novoUsuario))
             {
-                ViewBag.DuplicateUser = "Usuário já cadastrado!";
+                ViewData["DuplicateUser"] = "Usuário já cadastrado!";
                 return View();
             }
 
-            return RedirectToAction("Index");
-
+            TempData["Success"] = "Usuário cadastrado com sucesso!";
+            return RedirectToAction("Logar");
         }
 
         [AllowAnonymous]
-        [HttpGet("logar")]
+        [HttpGet]
         public IActionResult Logar()
         {
+            if (User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction("Index");
+            }
+
             return View();
         }
 
         [AllowAnonymous]
-        [HttpPost("logar")]
-        public async Task<IActionResult> Logar(CadastroUsuarioViewModel usuarioLogin)
+        [HttpPost]
+        public async Task<IActionResult> Logar(LoginUsuarioViewModel usuarioLogin)
         {
             var usuarioEncontrado = _usuarioService.BuscarUsuario(usuarioLogin);
 
             if (usuarioEncontrado == null)
             {
-                ViewBag.CredentialError = "Usuário ou Senha incorretos";
+                ViewData["CredentialError"] = "Usuário ou Senha incorretos";
                 return View();
             }
 
-            bool validadeSenha = await _usuarioService.HashSenhaEhValida(usuarioEncontrado, usuarioLogin);
-
-            if (!validadeSenha)
+            if (!await _usuarioService.HashSenhaEhValida(usuarioEncontrado, usuarioLogin))
             {
-                ViewBag.CredentialError = "Usuário ou Senha incorretos";
+                ViewData["CredentialError"] = "Usuário ou Senha incorretos";
                 return View();
             }
 
@@ -93,7 +101,7 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpGet("logout")]
+        [HttpGet]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

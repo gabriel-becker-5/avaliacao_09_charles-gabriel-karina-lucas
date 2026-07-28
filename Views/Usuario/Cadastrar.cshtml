@@ -2,7 +2,7 @@
 @model CadastroUsuarioViewModel
 
 @{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Cadastrar Usuário";
 }
 
 <div class="text-center">
@@ -22,8 +22,8 @@
             <label for="senha">Senha</label><br>
             <input type="password" asp-for="Senha" id="senha" name="senha" placeholder="Digite sua senha" required>
         </div>
-        <div asp-validation-summary="All" style="color:red"></div>
-        <div>@ViewBag.DuplicateUser</div>
+        <div asp-validation-summary="All" style="color:darkred"></div>
+        <div style="color:darkred">@ViewData["DuplicateUser"]</div>
         <br>
         <button type="submit">Cadastrar</button>
     </form>
