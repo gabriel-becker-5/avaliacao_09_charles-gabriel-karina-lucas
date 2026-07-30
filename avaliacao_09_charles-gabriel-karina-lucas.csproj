@@ -21,4 +21,8 @@
     <PackageReference Include="MySql.EntityFrameworkCore" Version="8.0.26" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Controllers\HomeController.cs" />
+  </ItemGroup>
+
 </Project>
