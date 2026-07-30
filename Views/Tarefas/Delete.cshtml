@@ -1,0 +1,32 @@
+﻿@model Tarefa
+
+@{
+    ViewData["Title"] = "Excluir Tarefa";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card border-danger shadow-sm">
+            <div class="card-header bg-danger text-white">
+                <h3>Confirmar Exclusão</h3>
+            </div>
+            <div class="card-body">
+                <p class="text-danger">Tem certeza de que deseja excluir esta tarefa?</p>
+                <hr />
+                <dl class="row">
+                    <dt class="col-sm-4">Título:</dt>
+                    <dd class="col-sm-8">@Model.Titulo</dd>
+
+                    <dt class="col-sm-4">Descrição:</dt>
+                    <dd class="col-sm-8">@Model.Descricao</dd>
+                </dl>
+
+                <form asp-action="Delete" method="post">
+                    <input type="hidden" asp-for="Id" />
+                    <button type="submit" class="btn btn-danger">Excluir Definitivamente</button>
+                    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
