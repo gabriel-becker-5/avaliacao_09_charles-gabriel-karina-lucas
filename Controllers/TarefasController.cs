@@ -131,10 +131,10 @@ public class TarefasController : Controller
     [HttpPost, ActionName("Delete")]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int? id)
-    {
+{
         var tarefa = await _context.Tarefa.FindAsync(id);
         if (tarefa != null)
-        {
+    {
             _context.Tarefa.Remove(tarefa);
         }
 

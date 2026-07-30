@@ -1,0 +1,45 @@
+﻿@using avaliacao_09_charles_gabriel_karina_lucas.Models.ViewModels
+@model LoginUsuarioViewModel
+
+@{
+    ViewData["Title"] = "Logar na Conta";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-dark text-white text-center">
+                <h3>Entrar</h3>
+
+                @if (TempData["Success"] != null)
+                {
+                    <div style="color:mediumseagreen">@TempData["Success"]</div>
+                }
+
+            </div>
+            <div class="card-body">
+                <form asp-controller="Usuario" asp-action="logar" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label">E-mail</label>
+                        <input type="email" asp-for="Email" id="email" name="email" class="form-control" placeholder="seu@email.com" required>
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Senha" class="form-label">Senha</label>
+                        <input type="password" asp-for="Senha" id="senha" name="senha" class="form-control" placeholder="Digite sua senha" required>
+                        <span asp-validation-for="Senha" class="text-danger"></span>
+                    </div>
+                    <div class="text-danger">@ViewData["CredentialError"]</div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Acessar</button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-center">
+                <small>Ainda não tem conta? <a asp-action="Cadastrar" asp-controller="Usuario">Cadastre-se</a></small>
+            </div>
+        </div>
+    </div>
+</div>
