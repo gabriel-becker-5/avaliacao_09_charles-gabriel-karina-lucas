@@ -36,9 +36,9 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseCookiePolicy();
 
-// Rota padrão alterada de Home/Index para Conta/Login
+// Rota padrão alterada de Home/Index para Usuario/Login
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Conta}/{action=Login}/{id?}");
+    pattern: "{controller=Usuario}/{action=Logar}/{id?}");
 
-app.Run();
+app.Run();  

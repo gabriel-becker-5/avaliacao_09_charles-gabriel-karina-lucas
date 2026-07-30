@@ -77,13 +77,13 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
 
             if (usuarioEncontrado == null)
             {
-                ViewData["CredentialError"] = "Usuário ou Senha incorretos";
+                ViewData["CredentialError"] = "Usuário ou Senha incorreto.";
                 return View();
             }
 
             if (!await _usuarioService.HashSenhaEhValida(usuarioEncontrado, usuarioLogin))
             {
-                ViewData["CredentialError"] = "Usuário ou Senha incorretos";
+                ViewData["CredentialError"] = "Usuário ou Senha incorreto.";
                 return View();
             }
 
@@ -101,7 +101,7 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpGet]
+        [HttpPost]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
