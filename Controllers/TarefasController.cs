@@ -1,10 +1,13 @@
+using avaliacao_09_charles_gabriel_karina_lucas.Data;
+using avaliacao_09_charles_gabriel_karina_lucas.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using avaliacao_09_charles_gabriel_karina_lucas.Models;
-using avaliacao_09_charles_gabriel_karina_lucas.Data;
+using System.Security.Claims;
 
 namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
 {
+    [Authorize]
     public class TarefasController : Controller
     {
         private readonly AppDbContext _context;
@@ -14,11 +17,33 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> Index()
+        private int ObterUsuarioId()
         {
-            return View(await _context.Tarefas.ToListAsync());
+            string? usuarioId =
+                User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!int.TryParse(usuarioId, out int id))
+            {
+                throw new UnauthorizedAccessException(
+                    "Não foi possível identificar o usuário logado.");
+            }
+
+            return id;
         }
 
+        // Lista somente as tarefas do usuário logado
+        public async Task<IActionResult> Index()
+        {
+            int usuarioId = ObterUsuarioId();
+
+            var tarefas = await _context.Tarefas
+                .Where(t => t.UsuarioId == usuarioId)
+                .ToListAsync();
+
+            return View(tarefas);
+        }
+
+        // Exibe somente uma tarefa pertencente ao usuário logado
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -26,8 +51,12 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
                 return NotFound();
             }
 
+            int usuarioId = ObterUsuarioId();
+
             var tarefa = await _context.Tarefas
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(t =>
+                    t.Id == id &&
+                    t.UsuarioId == usuarioId);
 
             if (tarefa == null)
             {
@@ -44,14 +73,18 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Titulo,Descricao,Concluida,DataCriacao")] Tarefa tarefa)
+        public async Task<IActionResult> Create(Tarefa tarefa)
         {
             if (ModelState.IsValid)
             {
+                tarefa.UsuarioId = ObterUsuarioId();
+
                 _context.Add(tarefa);
                 await _context.SaveChangesAsync();
+
                 return RedirectToAction(nameof(Index));
             }
+
             return View(tarefa);
         }
 
@@ -62,19 +95,38 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
                 return NotFound();
             }
 
-            var tarefa = await _context.Tarefas.FindAsync(id);
+            int usuarioId = ObterUsuarioId();
+
+            var tarefa = await _context.Tarefas
+                .FirstOrDefaultAsync(t =>
+                    t.Id == id &&
+                    t.UsuarioId == usuarioId);
+
             if (tarefa == null)
             {
                 return NotFound();
             }
+
             return View(tarefa);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Titulo,Descricao,Concluida,DataCriacao")] Tarefa tarefa)
+        public async Task<IActionResult> Edit(int id, Tarefa tarefa)
         {
             if (id != tarefa.Id)
+            {
+                return NotFound();
+            }
+
+            int usuarioId = ObterUsuarioId();
+
+            var tarefaExistente = await _context.Tarefas
+                .FirstOrDefaultAsync(t =>
+                    t.Id == id &&
+                    t.UsuarioId == usuarioId);
+
+            if (tarefaExistente == null)
             {
                 return NotFound();
             }
@@ -83,22 +135,27 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
             {
                 try
                 {
-                    _context.Update(tarefa);
+                    // Atualiza somente os campos permitidos.
+                    tarefaExistente.Titulo = tarefa.Titulo;
+                    tarefaExistente.Descricao = tarefa.Descricao;
+                    tarefaExistente.Data = tarefa.Data;
+                    tarefaExistente.Concluida = tarefa.Concluida;
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TarefaExists(tarefa.Id))
+                    if (!TarefaExists(tarefa.Id, usuarioId))
                     {
                         return NotFound();
                     }
-                    else
-                    {
-                        throw;
-                    }
+
+                    throw;
                 }
+
                 return RedirectToAction(nameof(Index));
             }
+
             return View(tarefa);
         }
 
@@ -109,8 +166,12 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
                 return NotFound();
             }
 
+            int usuarioId = ObterUsuarioId();
+
             var tarefa = await _context.Tarefas
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .FirstOrDefaultAsync(t =>
+                    t.Id == id &&
+                    t.UsuarioId == usuarioId);
 
             if (tarefa == null)
             {
@@ -124,19 +185,29 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var tarefa = await _context.Tarefas.FindAsync(id);
-            if (tarefa != null)
+            int usuarioId = ObterUsuarioId();
+
+            var tarefa = await _context.Tarefas
+                .FirstOrDefaultAsync(t =>
+                    t.Id == id &&
+                    t.UsuarioId == usuarioId);
+
+            if (tarefa == null)
             {
-                _context.Tarefas.Remove(tarefa);
+                return NotFound();
             }
 
+            _context.Tarefas.Remove(tarefa);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 
-        private bool TarefaExists(int id)
+        private bool TarefaExists(int id, int usuarioId)
         {
-            return _context.Tarefas.Any(e => e.Id == id);
+            return _context.Tarefas.Any(t =>
+                t.Id == id &&
+                t.UsuarioId == usuarioId);
         }
     }
 }

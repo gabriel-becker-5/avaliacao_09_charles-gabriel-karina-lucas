@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using avaliacao_09_charles_gabriel_karina_lucas.Data;
 
@@ -10,9 +11,11 @@ using avaliacao_09_charles_gabriel_karina_lucas.Data;
 namespace avaliacao_09_charles_gabriel_karina_lucas.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260731184223_AdicionarUsuarioIdEmTarefas")]
+    partial class AdicionarUsuarioIdEmTarefas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
