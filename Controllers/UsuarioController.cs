@@ -78,20 +78,20 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
             if (usuarioEncontrado == null)
             {
                 ViewData["CredentialError"] = "Usuário ou Senha incorreto.";
-                return View();
+                return View(usuarioLogin); 
             }
 
             if (!await _usuarioService.HashSenhaEhValida(usuarioEncontrado, usuarioLogin))
             {
                 ViewData["CredentialError"] = "Usuário ou Senha incorreto.";
-                return View();
+                return View(usuarioLogin); 
             }
 
             var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, usuarioEncontrado.Id.ToString()),
-                    new Claim(ClaimTypes.Name, usuarioEncontrado.Nome)
-                };
+    {
+        new Claim(ClaimTypes.NameIdentifier, usuarioEncontrado.Id.ToString()),
+        new Claim(ClaimTypes.Name, usuarioEncontrado.Nome)
+    };
 
             ClaimsIdentity claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             ClaimsPrincipal principal = new ClaimsPrincipal(claimsIdentity);

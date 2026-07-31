@@ -1,4 +1,4 @@
-using avaliacao_09_charles_gabriel_karina_lucas.Data;
+using avaliacao_09_charles_gabriel_karina_lucas.Interfaces;
 using avaliacao_09_charles_gabriel_karina_lucas.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,58 +10,43 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
     [Authorize]
     public class TarefasController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly ITarefaRepositorio _tarefaRepositorio;
 
-        public TarefasController(AppDbContext context)
+        public TarefasController(ITarefaRepositorio tarefaRepositorio)
         {
-            _context = context;
+            _tarefaRepositorio = tarefaRepositorio;
         }
 
         private int ObterUsuarioId()
         {
-            string? usuarioId =
-                User.FindFirstValue(ClaimTypes.NameIdentifier);
+            string? usuarioId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (!int.TryParse(usuarioId, out int id))
             {
-                throw new UnauthorizedAccessException(
-                    "Não foi possível identificar o usuário logado.");
+                throw new UnauthorizedAccessException("Não foi possível identificar o usuário logado.");
             }
 
             return id;
         }
 
-        // Lista somente as tarefas do usuário logado
-        public async Task<IActionResult> Index()
+      
+        public async Task<IActionResult> Index(string? statusFiltro)
         {
             int usuarioId = ObterUsuarioId();
+            var tarefas = await _tarefaRepositorio.ObterTodasPorUsuarioAsync(usuarioId, statusFiltro);
 
-            var tarefas = await _context.Tarefas
-                .Where(t => t.UsuarioId == usuarioId)
-                .ToListAsync();
-
+            ViewBag.StatusFiltroAtual = statusFiltro;
             return View(tarefas);
         }
 
-        // Exibe somente uma tarefa pertencente ao usuário logado
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             int usuarioId = ObterUsuarioId();
+            var tarefa = await _tarefaRepositorio.ObterPorIdEUsuarioAsync(id.Value, usuarioId);
 
-            var tarefa = await _context.Tarefas
-                .FirstOrDefaultAsync(t =>
-                    t.Id == id &&
-                    t.UsuarioId == usuarioId);
-
-            if (tarefa == null)
-            {
-                return NotFound();
-            }
+            if (tarefa == null) return NotFound();
 
             return View(tarefa);
         }
@@ -78,10 +63,7 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
             if (ModelState.IsValid)
             {
                 tarefa.UsuarioId = ObterUsuarioId();
-
-                _context.Add(tarefa);
-                await _context.SaveChangesAsync();
-
+                await _tarefaRepositorio.AdicionarAsync(tarefa);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -90,22 +72,12 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
 
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             int usuarioId = ObterUsuarioId();
+            var tarefa = await _tarefaRepositorio.ObterPorIdEUsuarioAsync(id.Value, usuarioId);
 
-            var tarefa = await _context.Tarefas
-                .FirstOrDefaultAsync(t =>
-                    t.Id == id &&
-                    t.UsuarioId == usuarioId);
-
-            if (tarefa == null)
-            {
-                return NotFound();
-            }
+            if (tarefa == null) return NotFound();
 
             return View(tarefa);
         }
@@ -114,42 +86,30 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, Tarefa tarefa)
         {
-            if (id != tarefa.Id)
-            {
-                return NotFound();
-            }
+            if (id != tarefa.Id) return NotFound();
 
             int usuarioId = ObterUsuarioId();
+            var tarefaExistente = await _tarefaRepositorio.ObterPorIdEUsuarioAsync(id, usuarioId);
 
-            var tarefaExistente = await _context.Tarefas
-                .FirstOrDefaultAsync(t =>
-                    t.Id == id &&
-                    t.UsuarioId == usuarioId);
-
-            if (tarefaExistente == null)
-            {
-                return NotFound();
-            }
+            if (tarefaExistente == null) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    // Atualiza somente os campos permitidos.
                     tarefaExistente.Titulo = tarefa.Titulo;
                     tarefaExistente.Descricao = tarefa.Descricao;
                     tarefaExistente.Data = tarefa.Data;
                     tarefaExistente.Concluida = tarefa.Concluida;
 
-                    await _context.SaveChangesAsync();
+                    await _tarefaRepositorio.AtualizarAsync(tarefaExistente);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!TarefaExists(tarefa.Id, usuarioId))
+                    if (!await _tarefaRepositorio.ExisteAsync(tarefa.Id, usuarioId))
                     {
                         return NotFound();
                     }
-
                     throw;
                 }
 
@@ -161,22 +121,12 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
 
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             int usuarioId = ObterUsuarioId();
+            var tarefa = await _tarefaRepositorio.ObterPorIdEUsuarioAsync(id.Value, usuarioId);
 
-            var tarefa = await _context.Tarefas
-                .FirstOrDefaultAsync(t =>
-                    t.Id == id &&
-                    t.UsuarioId == usuarioId);
-
-            if (tarefa == null)
-            {
-                return NotFound();
-            }
+            if (tarefa == null) return NotFound();
 
             return View(tarefa);
         }
@@ -186,28 +136,12 @@ namespace avaliacao_09_charles_gabriel_karina_lucas.Controllers
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             int usuarioId = ObterUsuarioId();
+            var tarefa = await _tarefaRepositorio.ObterPorIdEUsuarioAsync(id, usuarioId);
 
-            var tarefa = await _context.Tarefas
-                .FirstOrDefaultAsync(t =>
-                    t.Id == id &&
-                    t.UsuarioId == usuarioId);
+            if (tarefa == null) return NotFound();
 
-            if (tarefa == null)
-            {
-                return NotFound();
-            }
-
-            _context.Tarefas.Remove(tarefa);
-            await _context.SaveChangesAsync();
-
+            await _tarefaRepositorio.RemoverAsync(tarefa);
             return RedirectToAction(nameof(Index));
-        }
-
-        private bool TarefaExists(int id, int usuarioId)
-        {
-            return _context.Tarefas.Any(t =>
-                t.Id == id &&
-                t.UsuarioId == usuarioId);
         }
     }
 }

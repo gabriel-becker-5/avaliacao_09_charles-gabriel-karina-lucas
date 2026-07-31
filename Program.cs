@@ -16,14 +16,15 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Injeção de Dependências
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<ITarefaRepositorio, TarefaRepositorio>(); 
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Conta/Login");
+    app.UseExceptionHandler("/Usuario/Logar"); 
     app.UseHsts();
 }
 
@@ -34,11 +35,11 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseCookiePolicy();
 
-// Rota padrão alterada de Home/Index para Usuario/Login
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Usuario}/{action=Logar}/{id?}");
 
-app.Run();  
+app.Run();
